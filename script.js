@@ -1,49 +1,68 @@
-// Doctors Database
-const doctors = [
-    { id: 1, name: "Dr. Rajesh Kumar", specialty: "Cardiologist", experience: "15 years", fee: 1200, avatar: "❤️" },
-    { id: 2, name: "Dr. Priya Sharma", specialty: "Neurologist", experience: "12 years", fee: 1100, avatar: "🧠" },
-    { id: 3, name: "Dr. Amit Patel", specialty: "Orthopedic", experience: "10 years", fee: 1000, avatar: "🦴" },
-    { id: 4, name: "Dr. Sneha Reddy", specialty: "Pediatrician", experience: "8 years", fee: 900, avatar: "👶" },
-    { id: 5, name: "Dr. Vikram Singh", specialty: "Dermatologist", experience: "9 years", fee: 950, avatar: "🧴" },
-    { id: 6, name: "Dr. Neha Gupta", specialty: "Gynecologist", experience: "11 years", fee: 1100, avatar: "👩‍⚕️" }
-];
+// ==================== JSONBin.io Configuration ====================
+const BIN_ID = "69f4fd69856a6821899659c1";
+const API_KEY = "$2a$10$0vUEHFcuGWmANzLjdruSdukmz5u9/4TTxCqWZa8eU8v00u8Cz7zzy";
 
-// Patients Data (stored in localStorage)
-let patients = JSON.parse(localStorage.getItem('wellcare_patients')) || [];
-let appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
+// ==================== Global Variables ====================
+let doctors = [];
+let appointments = [];
 
-// Display Doctors on Homepage
+// ==================== Helper Functions ====================
+async function fetchData() {
+    try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': API_KEY }
+        });
+        const data = await response.json();
+        doctors = data.record.doctors;
+        appointments = data.record.appointments || [];
+        return data.record;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return null;
+    }
+}
+
+async function updateData(record) {
+    try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify(record)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating data:', error);
+        return null;
+    }
+}
+
+// ==================== Display Doctors ====================
 function displayDoctors() {
     const doctorGrid = document.getElementById('doctorGrid');
-    if (doctorGrid) {
-        doctorGrid.innerHTML = doctors.map(doc => `
-            <div class="doctor-card">
-                <div class="doctor-avatar">${doc.avatar}</div>
-                <h3>${doc.name}</h3>
-                <p class="doctor-specialty">${doc.specialty}</p>
-                <p>⭐ ${doc.experience}</p>
-                <p>💰 ₹${doc.fee}</p>
-            </div>
-        `).join('');
-    }
-}
-
-// Load Doctors in Appointment Form Dropdown
-function loadDoctorDropdown() {
+    if (!doctorGrid) return;
+    
+    doctorGrid.innerHTML = doctors.map(doc => `
+        <div class="doctor-card">
+            <div class="doctor-avatar">${doc.avatar}</div>
+            <h3>${doc.name}</h3>
+            <p class="doctor-specialty">${doc.specialty}</p>
+            <p>⭐ ${doc.experience}</p>
+            <p>💰 ₹${doc.fee}</p>
+        </div>
+    `).join('');
+    
     const doctorSelect = document.getElementById('doctorSelect');
     if (doctorSelect) {
-        doctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>';
-        doctors.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = `${doc.name} - ${doc.specialty} (₹${doc.fee})`;
-            doctorSelect.appendChild(option);
-        });
+        doctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>' +
+            doctors.map(doc => `<option value="${doc.id}">${doc.name} - ${doc.specialty} (₹${doc.fee})</option>`).join('');
     }
 }
 
-// Book Appointment
-function bookAppointment(event) {
+// ==================== Book Appointment ====================
+async function bookAppointment(event) {
     event.preventDefault();
     
     const patientName = document.getElementById('patientName')?.value;
@@ -60,89 +79,56 @@ function bookAppointment(event) {
     }
     
     const selectedDoctor = doctors.find(d => d.id == doctorId);
-    if (!selectedDoctor) {
-        showMessage('❌ Please select a valid doctor', 'error');
-        return;
-    }
     
-    const appointmentId = Date.now();
-    
-    const appointment = {
-        id: appointmentId,
-        patientName: patientName,
-        age: patientAge,
-        gender: patientGender,
+    const newAppointment = {
+        id: Date.now(),
+        patientName,
+        patientAge,
+        patientGender,
         doctorId: parseInt(doctorId),
         doctorName: selectedDoctor.name,
         specialty: selectedDoctor.specialty,
-        date: date,
-        time: time,
+        date,
+        time,
         symptoms: symptoms || 'No symptoms mentioned',
-        status: 'Scheduled',
         fee: selectedDoctor.fee,
         billPaid: false,
+        status: 'Scheduled',
         createdAt: new Date().toISOString()
     };
     
-    appointments.push(appointment);
-    localStorage.setItem('wellcare_appointments', JSON.stringify(appointments));
-    
-    // Add to patients record
-    let existingPatient = patients.find(p => p.name === patientName);
-    if (!existingPatient) {
-        existingPatient = {
-            id: Date.now(),
-            name: patientName,
-            age: patientAge,
-            gender: patientGender,
-            appointments: []
+    const record = await fetchData();
+    if (record) {
+        const updatedAppointments = [...(record.appointments || []), newAppointment];
+        const updatedRecord = {
+            doctors: doctors,
+            appointments: updatedAppointments,
+            patients: record.patients || []
         };
-        patients.push(existingPatient);
-    }
-    
-    existingPatient.appointments = existingPatient.appointments || [];
-    existingPatient.appointments.push({
-        id: appointmentId,
-        doctor: selectedDoctor.name,
-        specialty: selectedDoctor.specialty,
-        date: date,
-        time: time,
-        symptoms: symptoms || 'No symptoms mentioned',
-        status: 'Scheduled',
-        fee: selectedDoctor.fee
-    });
-    
-    localStorage.setItem('wellcare_patients', JSON.stringify(patients));
-    
-    showMessage(`✅ Appointment confirmed! ${selectedDoctor.name} on ${date} at ${time}. Fee: ₹${selectedDoctor.fee}`, 'success');
-    
-    // Reset form
-    document.getElementById('appointmentForm')?.reset();
-    displayPatientRecords();
-}
-
-// Show Message
-function showMessage(msg, type) {
-    const msgDiv = document.getElementById('appointmentMessage');
-    if (msgDiv) {
-        msgDiv.innerHTML = `<div class="${type}" style="padding: 10px; background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; color: ${type === 'success' ? '#155724' : '#721c24'}; border-radius: 8px;">${msg}</div>`;
-        setTimeout(() => {
-            msgDiv.innerHTML = '';
-        }, 4000);
+        
+        await updateData(updatedRecord);
+        await fetchData();
+        
+        showMessage(`✅ Appointment booked with ${selectedDoctor.name} on ${date} at ${time}. Fee: ₹${selectedDoctor.fee}`, 'success');
+        document.getElementById('appointmentForm')?.reset();
+        displayPatientRecords();
     }
 }
 
-// Display Patient Records
-function displayPatientRecords() {
+// ==================== Display Patient Records ====================
+async function displayPatientRecords() {
     const recordsDiv = document.getElementById('patientRecords');
     if (!recordsDiv) return;
     
-    if (appointments.length === 0) {
+    const record = await fetchData();
+    const allAppointments = record?.appointments || [];
+    
+    if (allAppointments.length === 0) {
         recordsDiv.innerHTML = '<p style="text-align: center;">📋 No appointments yet. Book your first appointment!</p>';
         return;
     }
     
-    recordsDiv.innerHTML = appointments.map(apt => `
+    recordsDiv.innerHTML = allAppointments.slice().reverse().map(apt => `
         <div class="record-item" style="border-bottom: 1px solid #ddd; padding: 15px; margin-bottom: 10px;">
             <div style="font-weight: bold; color: #2c5f8a;">👤 ${apt.patientName}</div>
             <div>👨‍⚕️ ${apt.doctorName} - ${apt.specialty}</div>
@@ -153,19 +139,28 @@ function displayPatientRecords() {
     `).join('');
 }
 
-// Initialize everything when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded - Initializing...');
+// ==================== Show Message ====================
+function showMessage(msg, type) {
+    const msgDiv = document.getElementById('appointmentMessage');
+    if (msgDiv) {
+        msgDiv.innerHTML = `<div class="${type}" style="padding: 10px; background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; color: ${type === 'success' ? '#155724' : '#721c24'}; border-radius: 8px;">${msg}</div>`;
+        setTimeout(() => {
+            msgDiv.innerHTML = '';
+        }, 4000);
+    }
+}
+
+// ==================== Initialize ====================
+async function init() {
+    await fetchData();
     displayDoctors();
-    loadDoctorDropdown();
-    displayPatientRecords();
+    await displayPatientRecords();
     
     const form = document.getElementById('appointmentForm');
     if (form) {
         form.addEventListener('submit', bookAppointment);
-        console.log('Form attached successfully');
     }
-    
-    // Debug: Check if doctors array is loaded
-    console.log('Doctors loaded:', doctors.length);
-});
+}
+
+// Start the app
+init();

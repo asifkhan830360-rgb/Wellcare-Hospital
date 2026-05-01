@@ -1,0 +1,125 @@
+
+<script>
+    if(localStorage.getItem('adminLoggedIn') !== 'true') {
+        window.location.href = 'admin-login.html';
+    }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Wellcare Hospital</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2>🏥 Wellcare HMS | Admin Panel</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">← Back to Website</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h3>📊 Dashboard Menu</h3>
+            <ul>
+                <li class="active" onclick="showSection('dashboard')">📈 Dashboard Overview</li>
+                <li onclick="showSection('appointments')">📅 All Appointments</li>
+                <li onclick="showSection('patients')">👥 Patients List</li>
+                <li onclick="showSection('billing')">💰 Billing Management</li>
+                <li onclick="showSection('doctors')">👨‍⚕️ Doctors Directory</li>
+                <li onclick="showSection('reports')">📋 Reports</li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section active">
+                <h2>Dashboard Overview</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card" id="totalPatients">📊 Loading...</div>
+                    <div class="stat-card" id="totalAppointments">📅 Loading...</div>
+                    <div class="stat-card" id="pendingBills">💰 Loading...</div>
+                    <div class="stat-card" id="totalRevenue">💵 Loading...</div>
+                </div>
+                
+                <div class="recent-section">
+                    <h3>Recent Appointments</h3>
+                    <div id="recentAppointments"></div>
+                </div>
+            </div>
+
+            <!-- Appointments Section -->
+            <div id="appointments" class="section">
+                <h2>All Appointments</h2>
+                <div class="table-responsive">
+                    <table class="data-table" id="appointmentsTable">
+                        <thead>
+                            <tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="appointmentsList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Patients Section -->
+            <div id="patients" class="section">
+                <h2>Patient Records</h2>
+                <div class="table-responsive">
+                    <table class="data-table" id="patientsTable">
+                        <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Appointments</th></tr></thead>
+                        <tbody id="patientsList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Billing Section -->
+            <div id="billing" class="section">
+                <h2>Billing Management</h2>
+                <div class="table-responsive">
+                    <table class="data-table" id="billingTable">
+                        <thead><tr><th>Patient</th><th>Doctor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="billingList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Doctors Section -->
+            <div id="doctors" class="section">
+                <h2>Our Doctors</h2>
+                <div class="doctors-admin" id="doctorsAdminList"></div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports" class="section">
+                <h2>Hospital Reports</h2>
+                <div class="reports-container">
+                    <div class="report-card" onclick="generateReport('daily')">
+                        <h3>📅 Daily Report</h3>
+                        <p>Today's appointments and revenue</p>
+                    </div>
+                    <div class="report-card" onclick="generateReport('monthly')">
+                        <h3>📊 Monthly Report</h3>
+                        <p>Monthly statistics and analytics</p>
+                    </div>
+                    <div class="report-card" onclick="generateReport('doctor')">
+                        <h3>👨‍⚕️ Doctor-wise Report</h3>
+                        <p>Performance by department</p>
+                    </div>
+                </div>
+                <div id="reportOutput" class="report-output"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin-script.js"></script>
+</body>
+</html>

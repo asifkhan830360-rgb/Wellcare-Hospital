@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellcare Hospital | Best Healthcare</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2>🏥 Wellcare Hospital</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#doctors">Doctors</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#appointment">Book Appointment</a></li>
+                <li><a href="admin.html" class="admin-btn">Admin Panel</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Your Health, Our Priority ❤️</h1>
+                <p>24/7 Emergency Care | Best Doctors | Advanced Technology</p>
+                <a href="#appointment" class="btn-primary">Book Appointment →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctors Section -->
+    <section id="doctors" class="doctors">
+        <div class="container">
+            <h2 class="section-title">👨‍⚕️ Our Expert Doctors</h2>
+            <div class="doctor-grid" id="doctorGrid">
+                <!-- Doctors loaded from JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">🏆 Our Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">🚑</div>
+                    <h3>24/7 Emergency</h3>
+                    <p>Round the clock emergency services</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🩺</div>
+                    <h3>Expert Doctors</h3>
+                    <p>50+ specialized doctors</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔬</div>
+                    <h3>Modern Lab</h3>
+                    <p>Advanced diagnostic facilities</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">💊</div>
+                    <h3>Pharmacy</h3>
+                    <p>24/7 medicine availability</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Appointment Section -->
+    <section id="appointment" class="appointment">
+        <div class="container">
+            <h2 class="section-title">📅 Book Appointment</h2>
+            <div class="appointment-container">
+                <form id="appointmentForm" class="appointment-form">
+                    <input type="text" id="patientName" placeholder="Full Name" required>
+                    <input type="number" id="patientAge" placeholder="Age" required>
+                    <select id="patientGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="doctorSelect" required>
+                        <option value="">Select Doctor</option>
+                    </select>
+                    <input type="date" id="appointmentDate" required>
+                    <input type="time" id="appointmentTime" required>
+                    <textarea id="symptoms" placeholder="Describe your symptoms..." rows="3"></textarea>
+                    <button type="submit" class="btn-submit">Confirm Appointment ✅</button>
+                </form>
+                <div id="appointmentMessage" class="message"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Patient Records Section -->
+    <section class="records">
+        <div class="container">
+            <h2 class="section-title">📋 Patient Records</h2>
+            <div class="records-container">
+                <div id="patientRecords" class="records-list">
+                    <p>No records yet. Book an appointment to see records.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 Wellcare Hospital. Caring for your health since 1990.</p>
+            <p>📞 Emergency: 102 | 📍 123 Healthcare City, Medical District</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

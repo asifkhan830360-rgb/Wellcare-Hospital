@@ -1,50 +1,59 @@
-// Admin Panel Functionality
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
+// ==================== JSONBin.io Configuration ====================
+const BIN_ID = "69f4fd69856a6821899659c1";
+const API_KEY = "$2a$10$0vUEHFcuGWmANzLjdruSdukmz5u9/4TTxCqWZa8eU8v00u8Cz7zzy";
+
+async function fetchData() {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': API_KEY }
     });
-    document.getElementById(sectionId).classList.add('active');
-    
-    document.querySelectorAll('.sidebar ul li').forEach(li => {
-        li.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    // Refresh data when section changes
-    if (sectionId === 'dashboard') loadAdminDashboard();
-    if (sectionId === 'appointments') loadAllAppointments();
-    if (sectionId === 'patients') loadAllPatients();
-    if (sectionId === 'billing') loadBillingData();
-    if (sectionId === 'doctors') loadDoctorsList();
+    const data = await response.json();
+    return data.record;
 }
 
-function loadAdminDashboard() {
-    const appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
-    const patients = JSON.parse(localStorage.getItem('wellcare_patients')) || [];
+async function updateData(record) {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY
+        },
+        body: JSON.stringify(record)
+    });
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+    if (sectionId === 'dashboard') loadAdminDashboard();
+    if (sectionId === 'appointments') loadAllAppointments();
+    if (sectionId === 'billing') loadBillingData();
+    if (sectionId === 'patients') loadAllPatients();
+    if (sectionId === 'doctors') loadDoctorsList();
+    if (sectionId === 'reports') loadReports();
+}
+
+async function loadAdminDashboard() {
+    const record = await fetchData();
+    const appointments = record.appointments || [];
+    const patients = record.patients || [];
     
-    const totalPatients = patients.length;
-    const totalAppointments = appointments.length;
-    const pendingBills = appointments.filter(a => !a.billPaid).length;
-    const totalRevenue = appointments.filter(a => a.billPaid).reduce((sum, a) => sum + a.fee, 0);
-    
-    document.getElementById('totalPatients').innerHTML = `<h3>${totalPatients}</h3><p>Total Patients</p>`;
-    document.getElementById('totalAppointments').innerHTML = `<h3>${totalAppointments}</h3><p>Appointments</p>`;
-    document.getElementById('pendingBills').innerHTML = `<h3>${pendingBills}</h3><p>Pending Bills</p>`;
-    document.getElementById('totalRevenue').innerHTML = `<h3>₹${totalRevenue}</h3><p>Total Revenue</p>`;
+    document.getElementById('totalPatients').innerHTML = `<h3>${patients.length}</h3><p>Total Patients</p>`;
+    document.getElementById('totalAppointments').innerHTML = `<h3>${appointments.length}</h3><p>Appointments</p>`;
+    document.getElementById('pendingBills').innerHTML = `<h3>${appointments.filter(a => !a.billPaid).length}</h3><p>Pending Bills</p>`;
+    document.getElementById('totalRevenue').innerHTML = `<h3>₹${appointments.filter(a => a.billPaid).reduce((s, a) => s + a.fee, 0)}</h3><p>Total Revenue</p>`;
     
     const recent = appointments.slice(-5).reverse();
     const recentDiv = document.getElementById('recentAppointments');
     if (recentDiv) {
         recentDiv.innerHTML = recent.map(apt => `
-            <div class="record-item">
-                <strong>${apt.patientName}</strong> - Dr. ${apt.doctorName} on ${apt.date}
-            </div>
+            <div class="record-item"><strong>${apt.patientName}</strong> - Dr. ${apt.doctorName} on ${apt.date}</div>
         `).join('');
     }
 }
 
-function loadAllAppointments() {
-    const appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
+async function loadAllAppointments() {
+    const record = await fetchData();
+    const appointments = record.appointments || [];
     const tbody = document.getElementById('appointmentsList');
     if (tbody) {
         tbody.innerHTML = appointments.map(apt => `
@@ -53,31 +62,33 @@ function loadAllAppointments() {
                 <td>Dr. ${apt.doctorName}</td>
                 <td>${apt.date}</td>
                 <td>${apt.time}</td>
-                <td><span class="status ${apt.status}">${apt.status}</span></td>
+                <td>${apt.billPaid ? '✅ Paid' : '⏳ Pending'}</td>
                 <td><button class="btn-danger" onclick="cancelAppointment(${apt.id})">Cancel</button></td>
             </tr>
         `).join('');
     }
 }
 
-function loadAllPatients() {
-    const patients = JSON.parse(localStorage.getItem('wellcare_patients')) || [];
+async function loadAllPatients() {
+    const record = await fetchData();
+    const patients = record.patients || [];
     const tbody = document.getElementById('patientsList');
     if (tbody) {
         tbody.innerHTML = patients.map(p => `
             <tr>
-                <td>${p.id}</td>
+                <td>${p.id || p.name}</td>
                 <td>${p.name}</td>
-                <td>${p.age}</td>
-                <td>${p.gender}</td>
+                <td>${p.age || '-'}</td>
+                <td>${p.gender || '-'}</td>
                 <td>${p.appointments?.length || 0}</td>
             </tr>
         `).join('');
     }
 }
 
-function loadBillingData() {
-    const appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
+async function loadBillingData() {
+    const record = await fetchData();
+    const appointments = record.appointments || [];
     const tbody = document.getElementById('billingList');
     if (tbody) {
         tbody.innerHTML = appointments.map(apt => `
@@ -93,45 +104,48 @@ function loadBillingData() {
 }
 
 function loadDoctorsList() {
-    const doctorsDiv = document.getElementById('doctorsAdminList');
-    if (doctorsDiv) {
-        doctorsDiv.innerHTML = `
-            <div class="doctor-grid">
-                ${doctors.map(doc => `
-                    <div class="doctor-card">
-                        <div class="doctor-avatar">${doc.avatar}</div>
-                        <h3>${doc.name}</h3>
-                        <p>${doc.specialty}</p>
-                        <p>⭐ ${doc.experience}</p>
-                        <p>💰 ₹${doc.fee}</p>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
+    fetchData().then(record => {
+        const doctors = record.doctors || [];
+        const doctorsDiv = document.getElementById('doctorsAdminList');
+        if (doctorsDiv) {
+            doctorsDiv.innerHTML = `
+                <div class="doctor-grid">
+                    ${doctors.map(doc => `
+                        <div class="doctor-card">
+                            <div class="doctor-avatar">${doc.avatar || '👨‍⚕️'}</div>
+                            <h3>${doc.name}</h3>
+                            <p>${doc.specialty}</p>
+                            <p>⭐ ${doc.experience}</p>
+                            <p>💰 ₹${doc.fee}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+    });
 }
 
-function markBillPaid(id) {
-    let appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
-    appointments = appointments.map(apt => 
+async function markBillPaid(id) {
+    const record = await fetchData();
+    const appointments = record.appointments.map(apt => 
         apt.id === id ? { ...apt, billPaid: true } : apt
     );
-    localStorage.setItem('wellcare_appointments', JSON.stringify(appointments));
+    await updateData({ ...record, appointments });
     loadBillingData();
-    showMessage('Bill marked as paid!', 'success');
+    loadAdminDashboard();
 }
 
-function cancelAppointment(id) {
-    let appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
-    appointments = appointments.filter(apt => apt.id !== id);
-    localStorage.setItem('wellcare_appointments', JSON.stringify(appointments));
+async function cancelAppointment(id) {
+    const record = await fetchData();
+    const appointments = record.appointments.filter(apt => apt.id !== id);
+    await updateData({ ...record, appointments });
     loadAllAppointments();
     loadAdminDashboard();
-    showMessage('Appointment cancelled!', 'success');
 }
 
-function generateReport(type) {
-    const appointments = JSON.parse(localStorage.getItem('wellcare_appointments')) || [];
+async function generateReport(type) {
+    const record = await fetchData();
+    const appointments = record.appointments || [];
     const output = document.getElementById('reportOutput');
     
     if (type === 'daily') {
@@ -165,7 +179,16 @@ function generateReport(type) {
     }
 }
 
-// Initial load when page opens
-document.addEventListener('DOMContentLoaded', () => {
+function loadReports() {
+    document.getElementById('reportOutput').innerHTML = '<p>Click on any report to generate</p>';
+}
+
+function logout() {
+    localStorage.removeItem('adminLoggedIn');
+    window.location.href = 'admin-login.html';
+}
+
+// Load dashboard when page opens
+if (document.getElementById('totalPatients')) {
     loadAdminDashboard();
-});
+}
